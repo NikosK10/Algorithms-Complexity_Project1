@@ -1,77 +1,73 @@
-/*  Αρχικά ταξινομούμε τα διαστήματα [si,fi] με βάση την αρχή τους si.
-    Έπειτα, θα περιγράψουμε την δυαδική αναζήτηση για τη επίλυση του προβλήματος.
-    Θελουμε τη μεγιστοποίηση της ελάχιστης απόστασης μεταξύ των καταστημάτων. (Δηλαδή θέλουμε τα καταστήματα να έχουν την μέγιστη δυνατή απόσταση).
-    Η μέγιστη ελάχιστη απόσταση (dmin) γενικά είναι μεταξύ low=1 και high=max(fi)-min(si).
-    Θέτουμε dmin=mid=(low+high)/2 και ελέγχουμε εάν τα Ν καταστήματα χωράνε στα M διαστήματα μας έχοντας αυτή την απόσταση ΤΟΥΛΑΧΙΣΤΟΝ.
-    Συγκεκριμένα, τοποθετώ το 1ο στην 1η διαθεσιμη θέση και το δεύετερο dmin θέσεις μετά εκτός εάν δε γίνεται άρα μπαίνει στην πρώτη διαθέσιμη θέση>dmin.
-    EAN: τα διαστήματα τελειώσουν πριν τοποθετήσω και τα N καταστήματα τότε απόσταση όχι εφικτή και θέτουμε high=mid-1 και επανελαβε.
-    EAN: χωρέσουν τα Ν καταστήματα ελέγχω μήπως μπορώ και πιο μεγάλο dmin άρα low=mid+1 και επανελαβε.
-    ΤΕΡΜΑΤΙΣΜΟΣ: όταν low>high
-
+/*  Initially, we sort the intervals [si,fi] based on their start si.
+    Then, we will describe the binary search to solve the problem.
+    We want to maximize the minimum distance between stores. (That is, we want the stores to have the maximum possible distance).
+    The maximum minimum distance (dmin) generally ranges between low=1 and high=max(fi)-min(si).
+    We set dmin=mid=(low+high)/2 and check if the N stores can fit into our M intervals having at least this distance.
+    Specifically, I place the 1st store in the 1st available position and the second store dmin positions later unless it's not possible, so it goes to the first available position>dmin.
+    IF: the intervals run out before I place all N stores then distance not feasible and set high=mid-1 and repeat.
+    IF: the N stores fit, check if I can go for a larger dmin hence low=mid+1 and repeat.
+    TERMINATION: when low>high
 */
-
 
 #include <iostream>
 #include <algorithm>
 using namespace std;
 
-
-// Συνάρτηση για να ελέγξουμε αν μπορούμε να τοποθετήσουμε τα καταστήματα με δεδομένη απόσταση
+// Function to check if we can place the stores with a given distance
 bool canPlaceStores(int N, int M, pair<int, int> spaces[], int dmin) {
-    int placed_stores = 1;  // Αρχίζουμε από το 1 γιατί το πρώτο κατάστημα έχει ήδη τοποθετηθεί στην πρωτη διαθεσιμη θεση
-    int last_position = spaces[0].first;  // Τοποθετούμε το πρώτο κατάστημα στην αρχή του πρώτου διαστήματος
+    int placed_stores = 1;  // We start from 1 because the first store has already been placed in the first available position
+    int last_position = spaces[0].first;  // Place the first store at the start of the first interval
 
     for (int i = 0; i < M; ++i) {
         int start = spaces[i].first;
         int end = spaces[i].second;
-        // Ξεκινάμε να τοποθετούμε το κατάστημα από την πρώτη θέση που είναι τουλάχιστον d_min μακριά από το προηγούμενο
-        int position =  max(start, last_position + dmin);
+        // We start placing the store from the first position that is at least d_min away from the previous one
+        int position = max(start, last_position + dmin);
 
-        // Τοποθετούμε τα καταστήματα σε αυτήν την περιοχή
+        // We place stores in this area
         while (position <= end) {
             placed_stores++;
             last_position = position;
             if (placed_stores == N) {
-                return true;  // Έχουν τοποθετηθεί όλα τα καταστήματα
+                return true;  // All stores have been placed
             }
-            position += dmin;  // Προχωράμε στην επόμενη θέση με απόσταση τουλάχιστον d_min
+            position += dmin;  // Move to the next position with at least d_min distance
         }
     }
 
-    return false;  // Δεν καταφέραμε να τοποθετήσουμε όλα τα καταστήματα
+    return false;  // We failed to place all stores
 }
-
 
 int main() {
     int N, M;
     scanf("%d %d", &N, &M);
 
-    pair<int, int> spaces[M];  // Πίνακας διαστημάτων τύπου pair<int, int>
+    pair<int, int> spaces[M];  // Array of intervals of type pair<int, int>
 
-    // Διαβάζουμε τα διαστήματα
+    // Read the intervals
     for (int i = 0; i < M; ++i) {
         scanf("%d %d",&spaces[i].first, &spaces[i].second);
     }
 
-    // Ταξινομούμε τα διαστήματα κατά αύξουσα σειρά με βάση την αρχή τους (si)
+    // Sort the intervals in ascending order based on their start (si)
     sort(spaces, spaces + M);
 
-    // Αρχικοποίηση για δυαδική αναζήτηση
+    // Initialization for binary search
     int low = 1, high = spaces[M - 1].second - spaces[0].first;
     int dmin = 0;
 
-    // Δυαδική αναζήτηση
+    // Binary search
     while (low <= high) {
         int mid = (low + high) / 2;
         if (canPlaceStores(N, M, spaces, mid)) {
-            dmin = mid; // Μπορούμε να τοποθετήσουμε τα καταστήματα με αυτή την απόσταση dmin
-            low = mid + 1;  // Δοκιμάζουμε μεγαλύτερη απόσταση
+            dmin = mid; // We can place the stores with this distance dmin
+            low = mid + 1;  // Try a larger distance
         } else {
-            high = mid - 1;  // Δεν μπορούμε να τοποθετήσουμε τα καταστήματα με αυτή την απόσταση dmin και δοκιμάζουμε μικρότερη απόσταση
+            high = mid - 1;  // We cannot place the stores with this distance dmin and try a smaller distance
         }
     }
 
-    // Εκτύπωση της μέγιστης δυνατής ελάχιστης απόστασης
+    // Print the maximum possible minimum distance
     printf("%d\n",dmin);
 
     return 0;
